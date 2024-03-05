@@ -1,0 +1,44 @@
+version: "3.7"
+
+networks:
+    ethereum:
+
+services:
+    geth:
+        image: ethereum/client-go:stable
+        restart: always
+        hostname: geth
+        networks:
+            - ethereum
+        volumes:
+            - ./geth-data:/data
+            - ./ethereum:/ethereum
+            - ./configs:/configs
+        command: --sepolia --cache=2048 --authrpc.jwtsecret=/ethereum/jwt.hex --syncmode snap --http --http.port 8545 --http.api=eth,net,web3,debug,admin,txpool --http.corsdomain="*" --http.vhosts="*" --http.addr=0.0.0.0 --ws --ws.port=8546 --ws.api=eth,net,web3,admin,txpool --ws.origins="*" --ws.vhosts="*" --ws.addr=0.0.0.0 --authrpc.port=8551 --authrpc.vhosts="*" --authrpc.addr=geth
+        ports:
+            - 8545:8545
+            - 8546:8546
+            - 8551:8551
+            - 30303:30303/tcp
+            - 30303:30303/udp
+            - 6060:6060
+            - 8086:8086
+
+    beacon:
+        image: gcr.io/prysmaticlabs/prysm/beacon-chain:stable
+        restart: always
+        hostname: beacon
+        networks:
+            - ethereum
+        volumes:
+            - ./prysm-data:/data
+            - ./ethereum:/ethereum
+            - ./configs:/configs
+        ports:
+            - 4000:4000
+            - 3500:3500
+            - 13000:13000
+            - 12000:12000
+        command: --config-file=/configs/beacon.yaml
+        depends_on:
+            - geth
