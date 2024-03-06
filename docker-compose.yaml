@@ -1,5 +1,12 @@
 version: "3.7"
 
+x-logging: &logging
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "10"
+      max-size: "100m"
+
 networks:
     ethereum:
 
@@ -11,34 +18,36 @@ services:
         networks:
             - ethereum
         volumes:
-            - ./geth-data:/data
-            - ./ethereum:/ethereum
-            - ./configs:/configs
-        command: --sepolia --cache=2048 --authrpc.jwtsecret=/ethereum/jwt.hex --syncmode snap --http --http.port 8545 --http.api=eth,net,web3,debug,admin,txpool --http.corsdomain="*" --http.vhosts="*" --http.addr=0.0.0.0 --ws --ws.port=8546 --ws.api=eth,net,web3,admin,txpool --ws.origins="*" --ws.vhosts="*" --ws.addr=0.0.0.0 --authrpc.port=8551 --authrpc.vhosts="*" --authrpc.addr=geth
+            - ./data/geth-data:/data
+            - ./data/ethereum:/ethereum
+        command: --sepolia --cache=2048 --authrpc.jwtsecret=/ethereum/jwt.hex --syncmode snap --http --http.port=8545 --http.api=eth,net,web3,debug,admin,txpool --http.corsdomain="*" --http.vhosts="*" --http.addr=0.0.0.0 --ws --ws.port=8546 --ws.api=eth,net,web3,admin,txpool --ws.origins="*"  --ws.addr=0.0.0.0 --authrpc.port=8551 --authrpc.vhosts="*" --authrpc.addr=0.0.0.0
         ports:
-            - 8545:8545
-            - 8546:8546
-            - 8551:8551
+            - ${BEACON_API_IP}:8545:8545
+            - ${BEACON_API_IP}:8546:8546
+            - ${BEACON_API_IP}:8551:8551
+            - ${BEACON_API_IP}:6060:6060
+            - ${BEACON_API_IP}:8086:8086
             - 30303:30303/tcp
             - 30303:30303/udp
-            - 6060:6060
-            - 8086:8086
+        <<: *logging
 
     beacon:
-        image: gcr.io/prysmaticlabs/prysm/beacon-chain:stable
+        image: gcr.io/prysmaticlabs/prysm/beacon-chain:${BEACON_VERSION}
         restart: always
         hostname: beacon
+        depends_on:
+            - geth
         networks:
             - ethereum
         volumes:
-            - ./prysm-data:/data
-            - ./ethereum:/ethereum
+            - ./data/prysm-data:/data
+            - ./data/ethereum:/ethereum
             - ./configs:/configs
         ports:
-            - 4000:4000
-            - 3500:3500
+            - ${BEACON_API_IP}:4000:4000
+            - ${BEACON_API_IP}:3500:3500
             - 13000:13000
             - 12000:12000
         command: --config-file=/configs/beacon.yaml
-        depends_on:
-            - geth
+        <<: *logging
+

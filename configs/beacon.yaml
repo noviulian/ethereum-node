@@ -1,5 +1,4 @@
 sepolia: true
-
 datadir: /data
 
 accept-terms-of-use: true
@@ -13,6 +12,18 @@ genesis-beacon-api-url: https://sepolia.beaconstate.info
 
 block-batch-limit: 128
 
+#######################
+# Connectivity settings
+p2p-host-ip: ""
+p2p-host-dns: ""
+
 rpc-host: 0.0.0.0
+monitoring-host: 0.0.0.0
+
 grpc-gateway-host: 0.0.0.0
-#EOF
+grpc-gateway-port: 3500
+eth-api-port: 3501
+
+p2p-tcp-port: 13000
+
+p2p-max-peers: 100
